@@ -1,10 +1,9 @@
 #! /usr/bin/env ruby
 require "pg"
 
-db = PG.connect(dbname:"expenses")
-table = db.exec("SELECT * FROM expenses ORDER BY created_on;")
+DB = PG.connect(dbname:"expenses")
 
-def list_commands
+def display_help
 	puts <<~HELP 
     An expense recording system
 
@@ -18,7 +17,8 @@ def list_commands
   HELP
 end 
 
-def list_expenses(table)
+def list_expenses
+	table = DB.exec("SELECT * FROM expenses ORDER BY created_on;")
 	table.each do |tuple|
 		cols = ["#{tuple["id"].rjust(3)}", 
 			"#{tuple["created_on"]}",
@@ -28,10 +28,24 @@ def list_expenses(table)
 	end
 end
 
+def add_expense(amnt, memo)
+	memo = memo.gsub("'", "''")
+	sql = "INSERT INTO expenses (amount, memo, created_on) VALUES (#{amnt}, '#{memo}', current_date)"
+	DB.exec(sql)
+end
+
 command = ARGV[0]
-if command && command.downcase == "list"
-	list_expenses(table)
+if command == "list"
+	list_expenses
+elsif command == "add"
+	if ARGV[1] && ARGV[2]
+		amount = ARGV[1]
+		memo = ARGV[2]
+		add_expense(amount, memo)
+	else
+		puts "You must provide an amount and memo."
+	end
 else 
-	list_commands
+	display_help
 end
 
