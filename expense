@@ -1,0 +1,32 @@
+#! /usr/bin/env ruby
+require "pg"
+
+db = PG.connect(dbname:"expenses")
+table = db.exec("SELECT * FROM expenses ORDER BY created_on;")
+puts "An expense recording system"
+puts
+puts "Commands:"
+puts
+puts "add AMOUNT MEMO - record a new expense"
+puts "clear - delete all expenses"
+puts "list - list all expenses"
+puts "delete NUMBER - remove expense with id NUMBER"
+puts "search QUERY - list expenses with a matching memo field"
+
+command = ARGV[0]
+
+if command && command.downcase == "list"
+	list_commands
+end
+
+def list_commands
+	table.each do |tuple|
+		cols = ["#{tuple["id"].rjust(3)}", 
+			"#{tuple["created_on"]}",
+			"#{tuple["amount"].rjust(12)}",
+			"#{tuple["memo"]}"]
+		puts cols.join(" | ")
+	end
+end
+
+
