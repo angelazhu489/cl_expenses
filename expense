@@ -9,8 +9,9 @@ class ExpenseData
 	end
 
 	def list_expenses
-		table = @db.exec("SELECT * FROM expenses ORDER BY created_on;")
-		display_expenses(table)
+		table = @db.exec("SELECT * FROM expenses ORDER BY created_on")
+		display_count(table)
+		display_expenses(table) if table.count > 0
 	end
 	
 	def add_expense(amnt, memo)
@@ -45,12 +46,27 @@ class ExpenseData
 	end
 
 	def display_expenses(table)
+		total = @db.exec("SELECT sum(amount) FROM expenses").values[0][0]
+		# amount_sum = expenses.field_values("amount").map(&:to_f).inject(:+)
 		table.each do |tuple|
 			cols = ["#{tuple["id"].rjust(3)}", 
 				"#{tuple["created_on"]}",
 				"#{tuple["amount"].rjust(12)}",
 				"#{tuple["memo"]}"]
 			puts cols.join(" | ")
+		end
+		puts "-" * 50
+		puts "Total#{total.rjust(26)}"
+	end
+
+	def display_count(table)
+		size = table.count
+		if size == 0
+			puts "There are no expenses."
+		elsif size == 1
+			puts "There is 1 expense."
+		else
+			puts "There are #{size} expenses."
 		end
 	end
 end
