@@ -23,6 +23,19 @@ class ExpenseData
 		sql = "INSERT INTO expenses (amount, memo, created_on) VALUES ($1, $2, $3)"
 		@db.exec_params(sql, [amnt, memo, date])
 	end
+
+	def search_expense(query)
+		sql = "SELECT * FROM expenses WHERE memo ILIKE $1"
+		table = @db.exec_params(sql, ["%#{query}%"])
+		table.values
+		table.each do |tuple|
+			cols = ["#{tuple["id"].rjust(3)}", 
+				"#{tuple["created_on"]}",
+				"#{tuple["amount"].rjust(12)}",
+				"#{tuple["memo"]}"]
+			puts cols.join(" | ")
+		end
+	end 
 end
 
 class CLI
@@ -41,6 +54,13 @@ class CLI
 				@app.add_expense(amount, memo)
 			else
 				puts "You must provide an amount and memo."
+			end
+		elsif command == "search"
+			if args[1]
+				query = args[1]
+				@app.search_expense(query)
+			else
+				puts "You must provide a search query."
 			end
 		else 
 			display_help
