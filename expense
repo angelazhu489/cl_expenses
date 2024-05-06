@@ -9,13 +9,7 @@ class ExpenseData
 
 	def list_expenses
 		table = @db.exec("SELECT * FROM expenses ORDER BY created_on;")
-		table.each do |tuple|
-			cols = ["#{tuple["id"].rjust(3)}", 
-				"#{tuple["created_on"]}",
-				"#{tuple["amount"].rjust(12)}",
-				"#{tuple["memo"]}"]
-			puts cols.join(" | ")
-		end
+		display_expenses(table)
 	end
 	
 	def add_expense(amnt, memo)
@@ -27,7 +21,23 @@ class ExpenseData
 	def search_expense(query)
 		sql = "SELECT * FROM expenses WHERE memo ILIKE $1"
 		table = @db.exec_params(sql, ["%#{query}%"])
-		table.values
+		display_expenses(table)
+	end 
+
+	def delete_expenses(id)
+		sql = "SELECT * FROM expenses WHERE id = $1"
+		row_to_delete = @db.exec_params(sql, [id])
+		if row_to_delete.none?
+			puts "There is no expense with the id #{id}."
+		else
+			sql = "DELETE FROM expenses WHERE id = $1"
+			@db.exec_params(sql, [id])
+			puts "The following expense has been deleted:"
+			display_expenses(row_to_delete)
+		end
+	end
+
+	def display_expenses(table)
 		table.each do |tuple|
 			cols = ["#{tuple["id"].rjust(3)}", 
 				"#{tuple["created_on"]}",
@@ -35,7 +45,7 @@ class ExpenseData
 				"#{tuple["memo"]}"]
 			puts cols.join(" | ")
 		end
-	end 
+	end
 end
 
 class CLI
@@ -61,6 +71,13 @@ class CLI
 				@app.search_expense(query)
 			else
 				puts "You must provide a search query."
+			end
+		elsif command == "delete"
+			if args[1]
+				id = args[1]
+				@app.delete_expenses(id)
+			else
+				puts "You must provide an id number."
 			end
 		else 
 			display_help
