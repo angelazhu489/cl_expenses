@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 require "pg"
 require "Date"
+require "io/console"
 
 class ExpenseData
 	def initialize
@@ -35,6 +36,12 @@ class ExpenseData
 			puts "The following expense has been deleted:"
 			display_expenses(row_to_delete)
 		end
+	end
+
+	def delete_all_expenses
+		sql = "DELETE FROM expenses"
+		@db.exec(sql)
+		puts "All expenses have been deleted."
 	end
 
 	def display_expenses(table)
@@ -79,6 +86,10 @@ class CLI
 			else
 				puts "You must provide an id number."
 			end
+		elsif command == "clear"
+			puts "This will remove all expenses. Are you sure? (y/n)"
+			input = STDIN.getch
+			@app.delete_all_expenses if input == "y"
 		else 
 			display_help
 		end
